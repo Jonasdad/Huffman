@@ -1,11 +1,4 @@
 defmodule Huffman do
-
-
-  @typedoc """
-  leaf {char, freq}
-  node {right, left}
-  """
-
   def sample() do
     'the quick brown fox jumps over the lazy dog
     this is a sample text that we will use when we build
@@ -15,19 +8,12 @@ defmodule Huffman do
   end
 
   def text() do
-    'I am a little bird'
-  end
-  def toString([]) do [] end
-  def toString([h|t]) do
-    IO.inspect(h)
-    toString(t)
+    'ABCA'
   end
 
   def test() do
     sample = text()
-    freqList = freq(sample)
-    toString(freqList)
-    tree = tree(sample)
+    _tree = tree(sample)
     #encode = encode_table(tree)
     #decode = decode_table(tree)
     #text = text()
@@ -44,20 +30,15 @@ defmodule Huffman do
   # Två metoder: huffman_tree och insert
   # huffman tree bygger trädet
   # build sätter rätt löv och noder på rätt plats
-  def huffman_tree([{tree, _}]) do tree end
-  def huffman_tree([{char1, freq1}, {char2, freq2} | t]) do
-    huffman_tree(build({{char1, char2}, freq1+freq2}, t))
-  end
-
+  def huffman_tree([{tree, _n}]) do tree end
+  def huffman_tree([{char1, freq1}, {char2, freq2} | t]) do huffman_tree(build({{char1, char2}, freq1+freq2}, t)) end
   def build({char, freq}, []) do [{char,freq}] end
-  def build({char1,freq1}, [{char2,freq2} | t]) when freq1 < freq2 do
-    [{char1, freq1}, {char2, freq2} | t]
-  end
-  def build({char1, freq1}, [{char2, freq2} | t]) do
-    [{char2, freq2} | build({char1, freq2}, t)]
+  def build({char1,freq1}, [{char2,freq2} | t]) do
+    if(freq1 < freq2) do [{char1, freq1}, {char2, freq2} | t]; else[{char2, freq2} | build({char1, freq1}, t)] end
   end
 
-  def traversal() do
+  def compress({left, right}) do compress({left, right}, []) end
+  def compress({left, right}, sequence) do
 
   end
   #def encode_table(tree) do
@@ -95,14 +76,4 @@ defmodule Huffman do
   # New character -> Keep running algorithm
   # Iterates through freqList => O(n^2) complexity for freq & numberOccurances combined.
   def numberOccurances(char, [diffChar | rest]) do [diffChar | numberOccurances(char, rest)] end
-
-
-  # TODO Implement Sort
-
-#  def sortFreq(_, []) do [] end
-#  def sortFreq([h|t]) do sortFreq(h, t) end
-#  def sortFreq(h1, [h2 | t]) do
-
-#  end
-
 end

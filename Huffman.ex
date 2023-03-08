@@ -1,24 +1,47 @@
+
 defmodule Huffman do
-  def sample() do
-    'the quick brown fox jumps over the lazy dog
-    this is a sample text that we will use when we build
-    up a table we will only handle lower case letters and
-    no punctuation symbols the frequency will of course not
-    represent english but it is probably not that far off'
-  end
 
-  def text() do
-    'This was an assignment in ID1019'
-  end
-
-  def test() do
-    sample = sample()
+  def bench() do
+    sample = read("C:/Users/Dader/Downloads/sample-2mb-text-file.txt")
     tree = tree(sample)
     coding_table = encode_table(tree)
-    text = sample()
-    seq = encode(text, coding_table)
-    decode(seq, coding_table)
+    seq = encode(sample, coding_table)
+
+    encode_length = length(sample)
+    decode_length = length(seq)
+   # decode(seq, coding_table)
+
+    time_encode = :timer.tc(
+      fn -> encode(sample, coding_table)
+      :ok
+    end
+    )
+
+    time_decode = :timer.tc(
+      fn -> decode(seq, coding_table)
+      :ok
   end
+    )
+    IO.puts("Number of characters: #{encode_length}")
+    IO.puts("Encode Time: #{elem(time_encode, 0) / 1000000}")
+    IO.puts("Decode Time: #{elem(time_decode, 0) / 1000000}")
+    IO.puts("Bits to encode: #{encode_length*8}")
+    IO.puts("Bits after encoding: #{decode_length}")
+    IO.puts("Ratio: #{1 - (decode_length/(encode_length*8))}")
+
+  end
+
+  # Simple function to read contents of a file into a string
+  def read(file) do
+    {:ok, file} = File.open(file, [:read, :utf8])
+    binary = IO.read(file, :all)
+    File.close(file)
+    case :unicode.characters_to_list(binary, :utf8) do
+      {:incomplete, list, _} -> list
+      list -> list
+    end
+  end
+
 
   def tree(sample) do
     freqList = freq(sample)
@@ -28,7 +51,8 @@ defmodule Huffman do
   # Två metoder: huffman_tree och insert
   # huffman tree bygger trädet
   # build sätter rätt löv och noder på rätt plats
-  def huffman_tree([{tree, n}]) do
+  def huffman_tree([]) do [] end
+  def huffman_tree([{tree, _}]) do
     tree
   end
 
@@ -53,14 +77,10 @@ defmodule Huffman do
 
   # Initiates compression
   def encode_table(tree) do
-    compress(tree)
+    compress(tree, [])
   end
 
   # Initiates compress/2 with an empty list to generate sequence
-  def compress({left, right}) do
-    compress({left, right}, [])
-  end
-
   # Create code for each character BACKWARDS
   def compress({left, right}, sequence) do
     left_seq = compress(left, [0 | sequence])
@@ -74,14 +94,18 @@ defmodule Huffman do
     [{char, Enum.reverse(code)}]
   end
 
-  #
+  # Generates a binary list sequence for each character
+  # returns entire string encoded by the huffman tree
   def encode([], _) do
     []
   end
-  def encode([ht | tt], etable) do
+  def encode([ht | tt], etable)do
     code = elem(List.keyfind(etable, ht, 0), 1)
     List.flatten([code | encode(tt, etable)])
   end
+
+
+  # Decodes a given binary list sequence into characters
   def decode([], _) do
     []
   end
@@ -90,6 +114,8 @@ defmodule Huffman do
     [char | decode(rest, table)]
   end
 
+  # Finds each character from a binary sequence
+  # starts at length 1 and increases until a match is found
   def decode_char(seq, n, table) do
     {code, rest} = Enum.split(seq, n)
 
